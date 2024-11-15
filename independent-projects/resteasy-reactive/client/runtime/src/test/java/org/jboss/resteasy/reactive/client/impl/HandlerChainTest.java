@@ -2,13 +2,13 @@ package org.jboss.resteasy.reactive.client.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 
 import java.util.Collections;
 
 import jakarta.ws.rs.RuntimeType;
 import jakarta.ws.rs.client.ClientRequestFilter;
 import jakarta.ws.rs.client.ClientResponseFilter;
-
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 import org.jboss.resteasy.reactive.client.logging.DefaultClientLogger;
 import org.jboss.resteasy.reactive.client.spi.ClientRestHandler;
@@ -20,11 +20,12 @@ public class HandlerChainTest {
     @Test
     public void preSendHandlerIsAlwaysFirst() throws Exception {
 
-        var chain = new HandlerChain(false, 8096, true, LoggingScope.NONE, Collections.emptyMap(), new DefaultClientLogger());
+        var initialChain = new HandlerChain(false, 8096, true, LoggingScope.NONE, Collections.emptyMap(),
+                new DefaultClientLogger());
 
         ClientRestHandler preHandler = ctx -> {
         };
-        chain.setPreClientSendHandler(preHandler);
+        HandlerChain chain = initialChain.setPreClientSendHandler(preHandler);
 
         var config = new ConfigurationImpl(RuntimeType.CLIENT);
         ClientRequestFilter testReqFilter = ctx -> {
@@ -41,6 +42,9 @@ public class HandlerChainTest {
 
         // Ensure pre-send is the very first
         assertEquals(handlers[0], preHandler);
+
+        // Ensure a chain is created when a pre-send handler is set
+        assertNotSame(initialChain, chain);
     }
 
 }
